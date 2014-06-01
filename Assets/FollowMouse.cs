@@ -16,26 +16,31 @@ public class FollowMouse : Photon.MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		float scale = 50;
-		Vector3 mouseDelta = new Vector3 (scale * Input.GetAxis("Mouse X"), scale * Input.GetAxis("Mouse Y"), 0);
-		accumulatedMousePosition += mouseDelta;
-		accumulatedMousePosition.x = Mathf.Clamp (accumulatedMousePosition.x, 0, Screen.width);
-		accumulatedMousePosition.y = Mathf.Clamp (accumulatedMousePosition.y, 0, Screen.height);
 
-		transform.position = new Vector3 (-5 + 10 * (accumulatedMousePosition.x / Screen.width),
-		                                  transform.position.y,
-		                                  -5 + 10 * (accumulatedMousePosition.y / Screen.height));
+		if (photonView.isMine) {
+			float scale = 50;
+			Vector3 mouseDelta = new Vector3 (scale * Input.GetAxis ("Mouse X"), scale * Input.GetAxis ("Mouse Y"), 0);
+			accumulatedMousePosition += mouseDelta;
+			accumulatedMousePosition.x = Mathf.Clamp (accumulatedMousePosition.x, 0, Screen.width);
+			accumulatedMousePosition.y = Mathf.Clamp (accumulatedMousePosition.y, 0, Screen.height);
+
+			Vector3 mousePosition = new Vector3 (accumulatedMousePosition.x / Screen.width - 0.5f, 0, accumulatedMousePosition.y / Screen.height-0.5f);
+			Quaternion cameraAboutY = Quaternion.Euler(new Vector3(0,Camera.main.transform.rotation.eulerAngles.y,0));
+			Vector3 relativePosition = cameraAboutY * mousePosition;
+			transform.position = new Vector3 (10 * (relativePosition.x),
+		                                  	  transform.position.y,
+			                                  10 * (relativePosition.z));
 	
-		if (Input.GetMouseButtonDown(0)) 
-			Grab();
-		else if (grabbed)
-			Drag();
-
+			if (Input.GetMouseButtonDown (0)) 
+				Grab ();
+			else if (grabbed)
+				Drag ();
+		}
 	}
 
 	void Grab() {
 		if (grabbed) {
-			grabbed.GetPhotonView().RPC("released",PhotonTargets.All,PhotonNetwork.player.ID);
+			grabbed.GetPhotonView().RPC("released",PhotonTargets.All);
 			//grabbed.rigidbody.constraints = RigidbodyConstraints.None;
 			grabbed = null;
 		}
@@ -45,9 +50,9 @@ public class FollowMouse : Photon.MonoBehaviour {
 			//Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 			if (Physics.Raycast(ray, out hit)) {
 				grabbed = hit.collider.gameObject;
-				grabbed.GetPhotonView().RPC("grabbed",PhotonTargets.All,PhotonNetwork.player.ID);
-				//grabbed.rigidbody.constraints = RigidbodyConstraints.FreezeRotation;
-				grabbed.transform.rotation = Quaternion.AngleAxis(270,new Vector3(1,0,0));
+
+				int newID = PhotonNetwork.AllocateViewID();
+				grabbed.GetPhotonView().RPC("grabbed",PhotonTargets.All,newID);
 				grabbedPosition = hit.transform.position;
 				grabbedBottom = hit.collider.bounds.min.y;
 			}

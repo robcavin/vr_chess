@@ -20,7 +20,7 @@ public class NewBehaviourScript : Photon.MonoBehaviour {
 	private RoomInfo[] roomsList;
 
 	void OnConnectedToMaster () {
-		RoomOptions roomOptions = new RoomOptions () { isVisible = false, maxPlayers = 4 };
+		RoomOptions roomOptions = new RoomOptions () { isVisible = false, maxPlayers = 2 };
 		PhotonNetwork.JoinOrCreateRoom ("VRoom", roomOptions, TypedLobby.Default);
 	}
 
@@ -28,9 +28,31 @@ public class NewBehaviourScript : Photon.MonoBehaviour {
 		Debug.Log ("Room created");
 	}
 
+	void enablePlayer(GameObject player) {
+		foreach (MonoBehaviour obj in player.GetComponents<MonoBehaviour>())
+			obj.enabled = true;
+
+		foreach (CharacterController obj in player.GetComponents<CharacterController>())
+			obj.enabled = true;
+
+	}
 	void OnJoinedRoom () {
 		Debug.Log ("Connected to Room");
-		PhotonNetwork.Instantiate ("Pointer", Vector3.zero, Quaternion.identity, 0);
+
+		if (PhotonNetwork.player.ID == 1) {
+			GameObject player = PhotonNetwork.Instantiate ("OculusPlayer", new Vector3 (0, 8.85f, -14), Quaternion.identity, 0);
+			player.SetActive(true);
+
+			PhotonNetwork.Instantiate ("Pointer", new Vector3 (0, 9, -4), Quaternion.identity, 0);
+
+		} else {
+			GameObject player = PhotonNetwork.Instantiate ("OculusPlayer", new Vector3 (0, 8.85f, 14), Quaternion.identity, 0);
+			player.SetActive(true);
+
+			PhotonNetwork.Instantiate ("Pointer", new Vector3 (0, 9, 4), Quaternion.LookRotation(new Vector3 (0, 0, -1)), 0);
+		}
+
+		Camera.main.enabled = false;
 	}
 
 	void OnPhotonCreateRoomFailed () {
