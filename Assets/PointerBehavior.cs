@@ -1,17 +1,29 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class FollowMouse : Photon.MonoBehaviour {
+public class PointerBehavior : Photon.MonoBehaviour {
+
+	public NetworkBehavior network;
+
+	private float lastSynchronizationTime = 0f;
+	private float syncDelay = 0f;
+	private float syncTime = 0f;
+	private Vector3 syncStartPosition = Vector3.zero;
+	private Vector3 syncEndPosition = Vector3.zero;
+
+	private Vector3 lastPostion;
 
 	Vector3 accumulatedMousePosition;
 	GameObject grabbed = null;
 	Vector3 grabbedPosition;
-	float grabbedBottom;
-	Rigidbody grabbedRigidBody;
+	//float grabbedBottom;
 
 	// Use this for initialization
 	void Start () {
+		lastPostion = transform.position;
 		accumulatedMousePosition = new Vector3 (Screen.width/2, Screen.height/2, 1);
+
+		network = GameObject.Find ("Networking").GetComponent<NetworkBehavior> ();
 	}
 	
 	// Update is called once per frame
@@ -24,8 +36,8 @@ public class FollowMouse : Photon.MonoBehaviour {
 			accumulatedMousePosition.x = Mathf.Clamp (accumulatedMousePosition.x, 0, Screen.width);
 			accumulatedMousePosition.y = Mathf.Clamp (accumulatedMousePosition.y, 0, Screen.height);
 
-			Vector3 mousePosition = new Vector3 (accumulatedMousePosition.x / Screen.width - 0.5f, 0, accumulatedMousePosition.y / Screen.height-0.5f);
-			Quaternion cameraAboutY = Quaternion.Euler(new Vector3(0,Camera.main.transform.rotation.eulerAngles.y,0));
+			Vector3 mousePosition = new Vector3 (accumulatedMousePosition.x / Screen.width - 0.5f, 0, accumulatedMousePosition.y / Screen.height - 0.5f);
+			Quaternion cameraAboutY = Quaternion.Euler (new Vector3 (0, network.GetPlayer().transform.rotation.eulerAngles.y, 0));
 			Vector3 relativePosition = cameraAboutY * mousePosition;
 			transform.position = new Vector3 (10 * (relativePosition.x),
 		                                  	  transform.position.y,
@@ -35,13 +47,15 @@ public class FollowMouse : Photon.MonoBehaviour {
 				Grab ();
 			else if (grabbed)
 				Drag ();
+		} else {
+			syncTime += Time.deltaTime;
+			transform.position = Vector3.Lerp (syncStartPosition, syncEndPosition, syncTime / syncDelay);
 		}
 	}
 
 	void Grab() {
 		if (grabbed) {
 			grabbed.GetPhotonView().RPC("released",PhotonTargets.All);
-			//grabbed.rigidbody.constraints = RigidbodyConstraints.None;
 			grabbed = null;
 		}
 		else {
@@ -54,7 +68,7 @@ public class FollowMouse : Photon.MonoBehaviour {
 				int newID = PhotonNetwork.AllocateViewID();
 				grabbed.GetPhotonView().RPC("grabbed",PhotonTargets.All,newID);
 				grabbedPosition = hit.transform.position;
-				grabbedBottom = hit.collider.bounds.min.y;
+				//grabbedBottom = hit.collider.bounds.min.y;
 			}
 		}
 	}
@@ -76,5 +90,29 @@ public class FollowMouse : Photon.MonoBehaviour {
 			position.y += grabbedPosition.y - grabbedBottom + 2.0f;
 			grabbed.position = position;
 		}*/
+	}
+
+	public void OnPhotonSerializeView (PhotonStream stream, PhotonMessageInfo info) {
+		
+		//if (stream.isWriting) {
+		if (stream.isWriting) {
+			stream.SendNext (transform.position);		
+		} else {
+			// Network player, receive data
+			Vector3 syncPosition = (Vector3)stream.ReceiveNext();
+
+			syncTime = 0f;
+			syncDelay = Mathf.Min(1,Time.time - lastSynchronizationTime);
+			lastSynchronizationTime = Time.time;
+			
+			syncEndPosition = syncPosition;
+			syncStartPosition = transform.position;
+		}
+	}
+		
+	void OnPhotonInstantiate(PhotonMessageInfo info){
+		renderer.material.color = new Color((float) photonView.instantiationData[0], 
+		                                    (float) photonView.instantiationData[1], 
+		                                    (float) photonView.instantiationData[2]);
 	}
 }

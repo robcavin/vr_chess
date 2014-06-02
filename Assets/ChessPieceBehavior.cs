@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class SoundOnCollide : Photon.MonoBehaviour {
+public class ChessPieceBehavior : Photon.MonoBehaviour {
 
 	private float lastSynchronizationTime = 0f;
 	private float syncDelay = 0f;
