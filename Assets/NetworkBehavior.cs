@@ -57,7 +57,7 @@ public class NetworkBehavior : Photon.MonoBehaviour {
 			PhotonNetwork.player.SetCustomProperties(settings);
 
 			object[] data = {Color.green.r,Color.green.g,Color.green.b};
-			GameObject pointer = PhotonNetwork.Instantiate ("Pointer", new Vector3 (0, 9, -4), Quaternion.identity, 0, data);
+			PhotonNetwork.Instantiate ("Pointer", new Vector3 (0, 9, -4), Quaternion.identity, 0, data);
 
 		} else {
 			_player = PhotonNetwork.Instantiate ("OculusPlayer", new Vector3 (0, 8.85f, 14), Quaternion.LookRotation(new Vector3 (0, 0, -1)), 0);
@@ -68,7 +68,7 @@ public class NetworkBehavior : Photon.MonoBehaviour {
 			PhotonNetwork.player.SetCustomProperties(settings);
 
 			object[] data = {Color.blue.r,Color.blue.g,Color.blue.b};
-			GameObject pointer = PhotonNetwork.Instantiate ("Pointer", new Vector3 (0, 9, 4), Quaternion.identity, 0, data);
+			PhotonNetwork.Instantiate ("Pointer", new Vector3 (0, 9, 4), Quaternion.identity, 0, data);
 		}
 
 		Camera.main.enabled = false;

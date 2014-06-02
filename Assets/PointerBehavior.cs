@@ -11,8 +11,6 @@ public class PointerBehavior : Photon.MonoBehaviour {
 	private Vector3 syncStartPosition = Vector3.zero;
 	private Vector3 syncEndPosition = Vector3.zero;
 
-	private Vector3 lastPostion;
-
 	Vector3 accumulatedMousePosition;
 	GameObject grabbed = null;
 	Vector3 grabbedPosition;
@@ -20,9 +18,7 @@ public class PointerBehavior : Photon.MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		lastPostion = transform.position;
 		accumulatedMousePosition = new Vector3 (Screen.width/2, Screen.height/2, 1);
-
 		network = GameObject.Find ("Networking").GetComponent<NetworkBehavior> ();
 	}
 	
