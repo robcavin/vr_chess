@@ -18,12 +18,12 @@ public class ChessPieceBehavior : Photon.MonoBehaviour {
 	void Update () {
 		if (isGrabbed && !photonView.isMine) {
 			syncTime += Time.deltaTime;
-			rigidbody.position = Vector3.Lerp (syncStartPosition, syncEndPosition, syncTime / syncDelay);
+			GetComponent<Rigidbody>().position = Vector3.Lerp (syncStartPosition, syncEndPosition, syncTime / syncDelay);
 		}
 	}
 
 	void OnCollisionEnter () {
-		audio.Play ();
+		GetComponent<AudioSource>().Play ();
 	}
 
 	[RPC]
@@ -34,13 +34,13 @@ public class ChessPieceBehavior : Photon.MonoBehaviour {
 		photonView.viewID = newID;
 
 		transform.rotation = Quaternion.AngleAxis(270,new Vector3(1,0,0));
-		rigidbody.isKinematic = true;
+		GetComponent<Rigidbody>().isKinematic = true;
 		isGrabbed = true;
 	}
 
 	[RPC]
 	public void released () {
-		rigidbody.isKinematic = false;
+		GetComponent<Rigidbody>().isKinematic = false;
 		isGrabbed = false;
 	}
 
@@ -49,8 +49,8 @@ public class ChessPieceBehavior : Photon.MonoBehaviour {
 		//if (stream.isWriting) {
 		if (stream.isWriting) {
 			// We own this player: send the others our data
-			stream.SendNext (rigidbody.position);
-			stream.SendNext (rigidbody.velocity);
+			stream.SendNext (GetComponent<Rigidbody>().position);
+			stream.SendNext (GetComponent<Rigidbody>().velocity);
 		} else {
 			// Network player, receive data
 			Vector3 syncPosition = (Vector3)stream.ReceiveNext();
@@ -61,7 +61,7 @@ public class ChessPieceBehavior : Photon.MonoBehaviour {
 			lastSynchronizationTime = Time.time;
 			
 			syncEndPosition = syncPosition + syncVelocity * syncDelay;
-			syncStartPosition = rigidbody.position;
+			syncStartPosition = GetComponent<Rigidbody>().position;
 		}
 	}
 

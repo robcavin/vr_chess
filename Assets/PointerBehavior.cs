@@ -107,7 +107,7 @@ public class PointerBehavior : Photon.MonoBehaviour {
 	}
 		
 	void OnPhotonInstantiate(PhotonMessageInfo info){
-		renderer.material.color = new Color((float) photonView.instantiationData[0], 
+		GetComponent<Renderer>().material.color = new Color((float) photonView.instantiationData[0], 
 		                                    (float) photonView.instantiationData[1], 
 		                                    (float) photonView.instantiationData[2]);
 	}
